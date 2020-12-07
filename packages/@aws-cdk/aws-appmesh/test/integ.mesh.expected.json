@@ -515,7 +515,8 @@
             },
             "Match": {
               "Prefix": "/"
-            }
+            },
+            "Timeout": {}
           }
         },
         "VirtualRouterName": {
@@ -553,7 +554,8 @@
             },
             "Match": {
               "Prefix": "/path2"
-            }
+            },
+            "Timeout": {}
           }
         },
         "VirtualRouterName": {
@@ -588,7 +590,8 @@
                   "Weight": 20
                 }
               ]
-            }
+            },
+            "Timeout": {}
           }
         },
         "VirtualRouterName": {

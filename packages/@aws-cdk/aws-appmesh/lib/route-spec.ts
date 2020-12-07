@@ -58,6 +58,20 @@ export interface HttpRouteSpecOptions {
    * List of targets that traffic is routed to when a request matches the route
    */
   readonly weightedTargets: WeightedTarget[];
+
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  readonly idle?: cdk.Duration;
+
+  /**
+   * PerRequest duration for the tcp route
+   *
+   * @default - none
+   */
+  readonly perRequest?: cdk.Duration;
 }
 
 /**
@@ -68,6 +82,13 @@ export interface TcpRouteSpecOptions {
    * List of targets that traffic is routed to when a request matches the route
    */
   readonly weightedTargets: WeightedTarget[];
+
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  readonly idle?: cdk.Duration;
 }
 
 /**
@@ -83,6 +104,20 @@ export interface GrpcRouteSpecOptions {
    * List of targets that traffic is routed to when a request matches the route
    */
   readonly weightedTargets: WeightedTarget[];
+
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  readonly idle?: cdk.Duration;
+
+  /**
+   * PerRequest duration for the tcp route
+   *
+   * @default - none
+   */
+  readonly perRequest?: cdk.Duration;
 }
 
 /**
@@ -174,11 +209,27 @@ class HttpRouteSpec extends RouteSpec {
    */
   public readonly weightedTargets: WeightedTarget[];
 
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  public readonly idle?: cdk.Duration;
+
+  /**
+   * PerRequest duration for the tcp route
+   *
+   * @default - none
+   */
+  public readonly perRequest?: cdk.Duration;
+
   constructor(props: HttpRouteSpecOptions, protocol: Protocol) {
     super();
     this.protocol = protocol;
     this.match = props.match;
     this.weightedTargets = props.weightedTargets;
+    this.idle = props.idle;
+    this.perRequest = props.perRequest;
   }
 
   public bind(_scope: cdk.Construct): RouteSpecConfig {
@@ -193,10 +244,28 @@ class HttpRouteSpec extends RouteSpec {
       match: {
         prefix: prefixPath,
       },
+      timeout: {
+        idle: this.idle ? this.renderIdleTimeout(this.idle): undefined,
+        perRequest: this.perRequest ? this.renderPerRequestTimeout(this.perRequest): undefined,
+      },
     };
     return {
       httpRouteSpec: this.protocol === Protocol.HTTP ? httpConfig : undefined,
       http2RouteSpec: this.protocol === Protocol.HTTP2 ? httpConfig : undefined,
+    };
+  }
+
+  private renderIdleTimeout(idle: cdk.Duration): CfnRoute.DurationProperty {
+    return {
+      unit: 'ms',
+      value: idle?.toMilliseconds(),
+    };
+  }
+
+  private renderPerRequestTimeout(perRequest: cdk.Duration): CfnRoute.DurationProperty {
+    return {
+      unit: 'ms',
+      value: perRequest?.toMilliseconds(),
     };
   }
 }
@@ -207,9 +276,17 @@ class TcpRouteSpec extends RouteSpec {
    */
   public readonly weightedTargets: WeightedTarget[];
 
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  public readonly idle?: cdk.Duration;
+
   constructor(props: TcpRouteSpecOptions) {
     super();
     this.weightedTargets = props.weightedTargets;
+    this.idle = props.idle;
   }
 
   public bind(_scope: cdk.Construct): RouteSpecConfig {
@@ -218,7 +295,17 @@ class TcpRouteSpec extends RouteSpec {
         action: {
           weightedTargets: renderWeightedTargets(this.weightedTargets),
         },
+        timeout: {
+          idle: this.idle ? this.renderIdleTimeout(this.idle): undefined,
+        },
       },
+    };
+  }
+
+  private renderIdleTimeout(idle: cdk.Duration): CfnRoute.DurationProperty {
+    return {
+      unit: 'ms',
+      value: idle?.toMilliseconds(),
     };
   }
 }
@@ -227,10 +314,26 @@ class GrpcRouteSpec extends RouteSpec {
   public readonly weightedTargets: WeightedTarget[];
   public readonly match: GrpcRouteMatch;
 
+  /**
+   * Idle duration for the tcp route
+   *
+   * @default - none
+   */
+  public readonly idle?: cdk.Duration;
+
+  /**
+   * PerRequest duration for the tcp route
+   *
+   * @default - none
+   */
+  public readonly perRequest?: cdk.Duration;
+
   constructor(props: GrpcRouteSpecOptions) {
     super();
     this.weightedTargets = props.weightedTargets;
     this.match = props.match;
+    this.idle = props.idle;
+    this.perRequest = props.perRequest;
   }
 
   public bind(_scope: cdk.Construct): RouteSpecConfig {
@@ -242,7 +345,25 @@ class GrpcRouteSpec extends RouteSpec {
         match: {
           serviceName: this.match.serviceName,
         },
+        timeout: {
+          idle: this.idle ? this.renderIdleTimeout(this.idle): undefined,
+          perRequest: this.perRequest ? this.renderPerRequestTimeout(this.perRequest): undefined,
+        },
       },
+    };
+  }
+
+  private renderIdleTimeout(idle: cdk.Duration): CfnRoute.DurationProperty {
+    return {
+      unit: 'ms',
+      value: idle?.toMilliseconds(),
+    };
+  }
+
+  private renderPerRequestTimeout(perRequest: cdk.Duration): CfnRoute.DurationProperty {
+    return {
+      unit: 'ms',
+      value: perRequest?.toMilliseconds(),
     };
   }
 }
