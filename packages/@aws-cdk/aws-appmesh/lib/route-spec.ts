@@ -58,7 +58,7 @@ export interface HttpRouteSpecOptions {
    * List of targets that traffic is routed to when a request matches the route
    */
   readonly weightedTargets: WeightedTarget[];
-  
+
   /**
    * An object that represents a http timeout
    * @default - none
@@ -309,20 +309,6 @@ class GrpcRouteSpec extends RouteSpec {
   public readonly weightedTargets: WeightedTarget[];
   public readonly match: GrpcRouteMatch;
   public readonly timeout?: GrpcTimeout;
-
-  /**
-   * Idle duration for the tcp route
-   *
-   * @default - none
-   */
-  public readonly idle?: cdk.Duration;
-
-  /**
-   * PerRequest duration for the tcp route
-   *
-   * @default - none
-   */
-  public readonly perRequest?: cdk.Duration;
 
   constructor(props: GrpcRouteSpecOptions) {
     super();
